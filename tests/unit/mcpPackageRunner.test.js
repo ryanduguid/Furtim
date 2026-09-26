@@ -1,5 +1,6 @@
 import { expect, test } from '@jest/globals';
 import { readFileSync } from 'node:fs';
+import { basename } from 'node:path';
 import { runInNewContext } from 'node:vm';
 
 const source = readFileSync(new URL('../../scripts/test-mcp-package.mjs', import.meta.url), 'utf8');
@@ -7,6 +8,7 @@ const [, selection] = source.match(/const MCP_DIR[^\n]*\n([\s\S]*?)const testDir
 
 function selectNpm(platform, env) {
   return runInNewContext(`${selection}\n({ npmExecutable, npmArguments })`, {
+    basename,
     process: { platform, env, execPath: '/fixture/node' },
   });
 }
@@ -14,6 +16,13 @@ function selectNpm(platform, env) {
 test('npm lifecycle runs use the Node executable and npm entry point', () => {
   expect(selectNpm('win32', {
     npm_config_user_agent: 'npm/11.0.0 node/v24.0.0 win32 x64',
+    npm_execpath: '/fixture/npm-cli.js',
+  })).toEqual({ npmExecutable: '/fixture/node', npmArguments: ['/fixture/npm-cli.js'] });
+});
+
+test('npm lifecycle runs accept a customised user-agent setting', () => {
+  expect(selectNpm('win32', {
+    npm_config_user_agent: 'fixture-client/1.0',
     npm_execpath: '/fixture/npm-cli.js',
   })).toEqual({ npmExecutable: '/fixture/node', npmArguments: ['/fixture/npm-cli.js'] });
 });

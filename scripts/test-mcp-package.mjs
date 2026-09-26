@@ -7,14 +7,14 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { access, mkdtemp, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCallback);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const MCP_DIR = join(ROOT, 'mcp');
-const npmCli = process.env.npm_config_user_agent?.startsWith('npm/')
+const npmCli = basename(process.env.npm_execpath ?? '') === 'npm-cli.js'
   ? process.env.npm_execpath
   : undefined;
 if (process.platform === 'win32' && !npmCli) {
