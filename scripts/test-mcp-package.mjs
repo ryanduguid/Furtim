@@ -14,17 +14,19 @@ import { promisify } from 'node:util';
 const execFile = promisify(execFileCallback);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const MCP_DIR = join(ROOT, 'mcp');
+const npmExecutable = process.env.npm_execpath ? process.execPath : 'npm';
+const npmArguments = process.env.npm_execpath ? [process.env.npm_execpath] : [];
 const testDir = await mkdtemp(join(tmpdir(), 'camofox-browser-mcp-package-'));
 let tarball;
 
 try {
-  const { stdout } = await execFile('npm', ['pack', '--json'], { cwd: MCP_DIR });
+  const { stdout } = await execFile(npmExecutable, [...npmArguments, 'pack', '--json'], { cwd: MCP_DIR });
   const [{ filename }] = JSON.parse(stdout);
   tarball = join(MCP_DIR, filename);
 
   const installDir = join(testDir, 'install');
   await mkdir(installDir);
-  await execFile('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', tarball], {
+  await execFile(npmExecutable, [...npmArguments, 'install', '--ignore-scripts', '--no-audit', '--no-fund', tarball], {
     cwd: installDir,
   });
 
