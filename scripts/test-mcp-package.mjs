@@ -14,8 +14,14 @@ import { promisify } from 'node:util';
 const execFile = promisify(execFileCallback);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const MCP_DIR = join(ROOT, 'mcp');
-const npmExecutable = process.env.npm_execpath ? process.execPath : 'npm';
-const npmArguments = process.env.npm_execpath ? [process.env.npm_execpath] : [];
+const npmCli = process.env.npm_config_user_agent?.startsWith('npm/')
+  ? process.env.npm_execpath
+  : undefined;
+if (process.platform === 'win32' && !npmCli) {
+  throw new Error('Run the MCP package check with "npm run test:mcp" on Windows.');
+}
+const npmExecutable = npmCli ? process.execPath : 'npm';
+const npmArguments = npmCli ? [npmCli] : [];
 const testDir = await mkdtemp(join(tmpdir(), 'camofox-browser-mcp-package-'));
 let tarball;
 
