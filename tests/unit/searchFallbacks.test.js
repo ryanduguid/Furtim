@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { getSearchFallbacks } from '../../lib/search-fallbacks.js';
 
-const serverSource = fs.readFileSync(path.join(process.cwd(), 'server.js'), 'utf8');
+const serverSource = fs.readFileSync(path.join(process.cwd(), 'server.js'), 'utf8').replace(/\r\n/g, '\n');
 
 describe('search fallbacks', () => {
   test('falls back from the Google macro to DuckDuckGo before Bing', () => {
