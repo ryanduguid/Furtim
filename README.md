@@ -112,6 +112,27 @@ Default port is `9377`. See [Environment Variables](#environment-variables) for 
 
 ### Docker
 
+Containers run as `node` (UID/GID `1000:1000`). The browser cache is at
+`/home/node/.cache/camoufox`; profiles default to `/home/node/.camofox/profiles`.
+Mount persistent profiles at that path, or set `CAMOFOX_PROFILE_DIR` to a writable
+mount. Application files under `/app` remain owned by root.
+
+When upgrading an existing profile volume, stop the old container and back up the
+volume first. Mount the same volume at the new profile path and give UID/GID 1000
+write access. For example, this changes ownership of a named volume without
+changing its contents (replace the volume and image names with yours):
+
+```bash
+docker run --rm --user 0 --entrypoint chown \
+  --mount type=volume,src=camofox-profiles,dst=/profiles \
+  camofox-browser -R 1000:1000 /profiles
+```
+
+Bind mounts also need host permissions that allow UID/GID 1000 to write. The
+container does not change mounted data ownership automatically. Third-party
+plugin install hooks run as root during the build; plugin runtime code runs as
+`node` and must use writable state directories.
+
 The included `Makefile` auto-detects your CPU architecture and pre-downloads Camoufox + yt-dlp binaries outside the Docker build, so rebuilds are fast (~30s vs ~3min).
 
 ```bash

@@ -13,6 +13,8 @@ jobs:
     name: Deploy to Cloudflare Workers
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Inject source verification hashes
         run: |
@@ -22,7 +24,7 @@ jobs:
           sed -i "s/__SOURCE_SHA256__/$HASH/" workers/crash-reporter/index.ts
 
       - name: Deploy
-        uses: cloudflare/wrangler-action@v3.14.0
+        uses: cloudflare/wrangler-action@392082e81ffbcb9ebdde27400634aa004b35ea37 # v3.14.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

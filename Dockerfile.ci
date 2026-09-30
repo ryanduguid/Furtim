@@ -54,22 +54,23 @@ RUN set -eux; \
       arm64) CAMOUFOX_ARCH="arm64" ;; \
       *) echo "Unsupported arch: ${TARGETARCH}" && exit 1 ;; \
     esac; \
-    mkdir -p /root/.cache/camoufox; \
+    mkdir -p /home/node/.cache/camoufox; \
     curl -fSL "https://github.com/daijro/camoufox/releases/download/v${CAMOUFOX_VERSION}-${CAMOUFOX_RELEASE}/camoufox-${CAMOUFOX_VERSION}-${CAMOUFOX_RELEASE}-lin.${CAMOUFOX_ARCH}.zip" \
       -o /tmp/camoufox.zip; \
-    (unzip -q /tmp/camoufox.zip -d /root/.cache/camoufox || true); \
-    chmod -R 755 /root/.cache/camoufox; \
-    echo "{\"version\":\"${CAMOUFOX_VERSION}\",\"release\":\"${CAMOUFOX_RELEASE}\"}" > /root/.cache/camoufox/version.json; \
-    test -f /root/.cache/camoufox/camoufox-bin && echo "Camoufox installed successfully"; \
+    (unzip -q /tmp/camoufox.zip -d /home/node/.cache/camoufox || true); \
+    chmod -R 755 /home/node/.cache/camoufox; \
+    echo "{\"version\":\"${CAMOUFOX_VERSION}\",\"release\":\"${CAMOUFOX_RELEASE}\"}" > /home/node/.cache/camoufox/version.json; \
+    test -f /home/node/.cache/camoufox/camoufox-bin && echo "Camoufox installed successfully"; \
     rm /tmp/camoufox.zip
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json postinstall.js ./
+COPY lib/camoufox-download.js ./lib/camoufox-download.js
 COPY scripts/ ./scripts/
 # Build tools are needed when better-sqlite3 has no native prebuild for the target.
 # Trixie's glibc also supports the upstream arm64 prebuild at runtime.
-RUN npm ci --omit=dev \
+RUN CAMOFOX_SKIP_DOWNLOAD=1 npm ci --omit=dev \
     && apt-get purge -y --auto-remove build-essential \
     && rm -rf /var/lib/apt/lists/*
 
@@ -91,6 +92,11 @@ RUN case "${TARGETARCH}" in \
       *) echo "Unsupported arch: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     sh scripts/install-plugin-deps.sh
+
+RUN mkdir -p /home/node/.camofox/profiles \
+    && chown -R node:node /home/node/.cache /home/node/.camofox
+
+USER node
 
 ENV NODE_ENV=production
 ENV CAMOFOX_PORT=9377
