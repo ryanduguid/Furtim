@@ -181,7 +181,7 @@ export async function register(app, ctx, pluginConfig = {}) {
           status: 'ok', transcript: transcriptText,
           video_url: url, video_id: videoId, video_title: meta.title,
           language: lang, total_words: transcriptText.split(/\s+/).length,
-          available_languages: meta.languages,
+          available_languages: meta.tracks.map(t => ({ code: t.code, name: t.name, kind: t.kind })),
         };
       } finally {
         await closeLeasedPage(session, page, lease);
