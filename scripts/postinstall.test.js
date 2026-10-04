@@ -5,7 +5,12 @@ import { tmpdir } from 'os';
 import { spawnSync } from 'child_process';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { downloadBundledCamoufox } from '../lib/camoufox-download.js';
+import { OS_NAME } from 'camoufox-js/dist/pkgman.js';
+import {
+  downloadBundledCamoufox,
+  PINNED_CAMOUFOX_VERSION,
+  PinnedCamoufoxFetcher,
+} from '../lib/camoufox-download.js';
 import { externalExecutableFromEnv } from '../postinstall.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -90,5 +95,18 @@ describe('postinstall downloader', () => {
     expect(install).toHaveBeenCalledTimes(1);
     expect(downloadGeoIp).toHaveBeenCalledTimes(1);
     expect(downloadAddons).toHaveBeenCalledTimes(1);
+  });
+
+  test('accepts only the pinned Camoufox build', () => {
+    const fetcher = new PinnedCamoufoxFetcher();
+    const asset = (version) => ({
+      name: `camoufox-${version}-${OS_NAME}.${fetcher.arch}.zip`,
+      browser_download_url: `https://example.test/${version}.zip`,
+    });
+
+    expect(fetcher.checkAsset(asset(PINNED_CAMOUFOX_VERSION))?.[1])
+      .toBe(`https://example.test/${PINNED_CAMOUFOX_VERSION}.zip`);
+    expect(fetcher.checkAsset(asset('156.0.1-beta.34'))).toBeNull();
+    expect(fetcher.apiUrl).toMatch(/\?per_page=100$/);
   });
 });
