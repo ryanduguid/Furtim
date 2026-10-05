@@ -54,6 +54,7 @@
     "plugins/vnc/vnc-watcher-lib.sh",
     "plugins/youtube/index.js",
     "plugins/youtube/youtube.js",
+    "scripts/fetch-camoufox.js",
     "postinstall.js"
   ],
   "openclaw": {
