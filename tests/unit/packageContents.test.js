@@ -12,12 +12,17 @@ import { fileURLToPath } from 'url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
+// Windows ships npm as a .cmd shim, which spawnSync cannot run without a shell,
+// so run npm's own CLI script with this Node binary there.
+function npmCommand(args) {
+  if (process.platform !== 'win32') return ['npm', args];
+  const cli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  return [process.execPath, [cli, ...args]];
+}
+
 function packedFiles() {
-  const result = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
-    cwd: ROOT,
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  });
+  const [command, args] = npmCommand(['pack', '--dry-run', '--json', '--ignore-scripts']);
+  const result = spawnSync(command, args, { cwd: ROOT, encoding: 'utf8' });
   expect(result.status).toBe(0);
   const [{ files }] = JSON.parse(result.stdout);
   return new Set(files.map((f) => normalize(f.path)));
