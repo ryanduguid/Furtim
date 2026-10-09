@@ -13,6 +13,11 @@
   </p>
 </div>
 
+**Fork status**
+
+[![Fork code quality](https://app.codacy.com/project/badge/Grade/94d272f846cb4cd684976ddd08eb0101?branch=master)](https://app.codacy.com/gh/ryanduguid/Furtim/dashboard)
+[![Fork CI](https://github.com/ryanduguid/Furtim/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ryanduguid/Furtim/actions/workflows/ci.yml)
+
 <br/>
 
 > <a href="https://askjo.ai?ref=camofox"><img src="jo-logo.png" alt="Jo" width="80" height="80" align="left" /></a>
