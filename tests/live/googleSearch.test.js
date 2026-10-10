@@ -1,5 +1,6 @@
 import { startServer, stopServer, getServerUrl } from '../helpers/startServer.js';
 import { createClient } from '../helpers/client.js';
+import { expectGoogleSearch } from '../helpers/searchResult.js';
 
 // Live Google tests are opt-in due to potential captchas/rate limiting
 const SKIP_LIVE_TESTS = !process.env.RUN_LIVE_TESTS;
@@ -28,8 +29,7 @@ describe('Live Google Search', () => {
       // Use the @google_search macro
       const result = await client.navigate(tabId, '@google_search Camoufox playwright browser');
       
-      expect(result.ok).toBe(true);
-      expect(result.url).toContain('google.com');
+      expectGoogleSearch(result, 'Camoufox playwright browser');
       
       // Get snapshot - should contain search results
       const snapshot = await client.getSnapshot(tabId);
@@ -62,7 +62,8 @@ describe('Live Google Search', () => {
       const { tabId } = await client.createTab();
       
       // Search for something specific
-      await client.navigate(tabId, '@google_search playwright documentation');
+      const result = await client.navigate(tabId, '@google_search playwright documentation');
+      expectGoogleSearch(result, 'playwright documentation');
       
       // Get snapshot to find a result link
       const snapshot = await client.getSnapshot(tabId);

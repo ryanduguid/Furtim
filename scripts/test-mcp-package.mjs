@@ -19,7 +19,8 @@ let tarball;
 
 try {
   const { stdout } = await execFile('npm', ['pack', '--json'], { cwd: MCP_DIR });
-  const [{ filename }] = JSON.parse(stdout);
+  const packages = JSON.parse(stdout);
+  const [{ filename }] = Array.isArray(packages) ? packages : Object.values(packages);
   tarball = join(MCP_DIR, filename);
 
   const installDir = join(testDir, 'install');

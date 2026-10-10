@@ -33,7 +33,6 @@ class BrowserClient {
       }
       
       const response = await fetch(url, fetchOptions);
-      clearTimeout(timeoutId);
       
       const contentType = response.headers.get('content-type');
       if (contentType?.includes('application/json')) {
@@ -51,11 +50,12 @@ class BrowserClient {
         return await response.text();
       }
     } catch (err) {
-      clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
         throw new Error(`Request timeout after ${options.timeout || this.timeout}ms: ${method} ${path}`);
       }
       throw err;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
   
@@ -84,14 +84,21 @@ class BrowserClient {
     }
   }
   
-  async navigate(tabId, urlOrMacro) {
-    // Support both regular URLs and @macro syntax
+  async navigate(tabId, urlOrMacro, { timeout = Math.max(this.timeout, 60000) } = {}) {
+    let body = { userId: this.userId, url: urlOrMacro };
     if (urlOrMacro.startsWith('@')) {
       const [macro, ...queryParts] = urlOrMacro.split(' ');
       const query = queryParts.join(' ');
-      return this.request('POST', `/tabs/${tabId}/navigate`, { userId: this.userId, macro, query });
+      body = { userId: this.userId, macro, query };
     }
-    return this.request('POST', `/tabs/${tabId}/navigate`, { userId: this.userId, url: urlOrMacro });
+    try {
+      return await this.request('POST', `/tabs/${tabId}/navigate`, body, { timeout });
+    } catch (err) {
+      if (err.status !== 409 || err.data?.code !== 'navigation_race' ||
+          err.data?.recovery !== 'snapshot_then_retry') throw err;
+      await this.getSnapshot(tabId);
+      return this.request('POST', `/tabs/${tabId}/navigate`, body, { timeout });
+    }
   }
   
   async getSnapshot(tabId, options = {}) {

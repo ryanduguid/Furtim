@@ -1,17 +1,9 @@
 import { startServer, stopServer, getServerUrl } from '../helpers/startServer.js';
 import { createClient } from '../helpers/client.js';
+import { productUrls } from '../helpers/amazonProducts.js';
 
 const SKIP_LIVE_TESTS = !process.env.RUN_LIVE_TESTS;
 const PRODUCT_LIMIT = 3;
-
-function productUrls(links) {
-  return [...new Set(
-    links
-      .map(({ url }) => url)
-      .filter((url) => /^https:\/\/www\.amazon\.com\/.+\/dp\/[A-Z0-9]{10}(?:[/?]|$)/.test(url))
-      .map((url) => new URL(url).origin + new URL(url).pathname.match(/^(.+\/dp\/[A-Z0-9]{10})/)?.[1]),
-  )].slice(0, PRODUCT_LIMIT);
-}
 
 const PRODUCT_DETAILS = `(() => ({
   title: document.querySelector('#productTitle')?.textContent?.trim() || null,
@@ -38,9 +30,10 @@ describe('Live Amazon product prices', () => {
     const client = createClient(serverUrl);
     try {
       const { tabId } = await client.createTab();
-      await client.navigate(tabId, '@amazon_search laptop stand');
+      const search = await client.navigate(tabId, '@amazon_search laptop stand');
+      expect(search.ok).toBe(true);
       const { links } = await client.getLinks(tabId, { limit: 200 });
-      const urls = productUrls(links);
+      const urls = productUrls(links, search.url, PRODUCT_LIMIT);
       expect(urls).toHaveLength(PRODUCT_LIMIT);
 
       const products = [];
