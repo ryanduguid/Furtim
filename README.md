@@ -40,6 +40,16 @@ npm install && npm start
 
 ---
 
+On this page:
+
+- [Quick Start](#quick-start)
+- [Usage](#usage)
+- [API](#api)
+- [Browser Configuration](#browser-configuration)
+- [Environment Variables](#environment-variables)
+- [Security Model](#security-model)
+- [Testing](#testing)
+
 ## Why
 
 AI agents need to browse the real web. Playwright gets blocked. Headless Chrome gets fingerprinted. Stealth plugins become the fingerprint.
