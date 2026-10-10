@@ -1,5 +1,6 @@
 import { startServer, stopServer, getServerUrl } from '../helpers/startServer.js';
 import { createClient } from '../helpers/client.js';
+import { expectGoogleSearch } from '../helpers/searchResult.js';
 
 // Live macro tests are opt-in due to external site dependencies
 const SKIP_LIVE_TESTS = !process.env.RUN_LIVE_TESTS;
@@ -27,9 +28,7 @@ describe('Live Macro URL Expansion', () => {
       
       const result = await client.navigate(tabId, '@google_search test query');
       
-      expect(result.ok).toBe(true);
-      expect(result.url).toContain('google.com/search');
-      expect(result.url).toContain('q=test');
+      expectGoogleSearch(result, 'test query');
     } finally {
       await client.cleanup();
     }
@@ -60,8 +59,11 @@ describe('Live Macro URL Expansion', () => {
       const result = await client.navigate(tabId, '@amazon_search laptop stand');
       
       expect(result.ok).toBe(true);
-      expect(result.url).toContain('amazon.com/s');
-      expect(result.url).toMatch(/k=laptop[\+%20]stand/);
+      const url = new URL(result.url);
+      expect(['www.amazon.com', 'www.amazon.com.au']).toContain(url.hostname);
+      expect(url.protocol).toBe('https:');
+      expect(url.pathname).toMatch(/^\/s(?:\/|$)/);
+      expect(url.searchParams.get('k') || url.searchParams.get('field-keywords')).toBe('laptop stand');
     } finally {
       await client.cleanup();
     }
@@ -108,9 +110,7 @@ describe('Live Macro URL Expansion', () => {
       
       const result = await client.navigate(tabId, '@google_search hello & world');
       
-      expect(result.ok).toBe(true);
-      // & should be encoded as %26
-      expect(result.url).toContain('q=hello%20%26%20world');
+      expectGoogleSearch(result, 'hello & world');
     } finally {
       await client.cleanup();
     }

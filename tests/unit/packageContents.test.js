@@ -24,7 +24,8 @@ function packedFiles() {
   const [command, args] = npmCommand(['pack', '--dry-run', '--json', '--ignore-scripts']);
   const result = spawnSync(command, args, { cwd: ROOT, encoding: 'utf8' });
   expect(result.status).toBe(0);
-  const [{ files }] = JSON.parse(result.stdout);
+  const packages = JSON.parse(result.stdout);
+  const { files } = Array.isArray(packages) ? packages[0] : packages[pkg.name];
   return new Set(files.map((f) => normalize(f.path)));
 }
 
